@@ -1,7 +1,7 @@
 const { default: axios } = require('axios');
-import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
+
 const refs = {
   form: document.querySelector('form'),
   input: document.querySelector('input'),
@@ -9,24 +9,36 @@ const refs = {
   div: document.querySelector('div'),
   buttonMore: document.querySelector('button[type=button]'),
 };
-refs.form.addEventListener('submit', handleSubmit);
-refs.buttonMore.addEventListener('click', handleClick);
+
 let wordForSearch;
 let number = 1;
+
+refs.form.addEventListener('submit', handleSubmit);
+refs.buttonMore.addEventListener('click', handleClick);
 
 refs.buttonMore.style.display = 'none';
 
 async function handleSubmit(event) {
   event.preventDefault();
+  if (refs.input.value.trim() === '') {
+    Notiflix.Notify.failure("We're sorry, try to enter something another.");
+    return;
+  }
   try {
-    let gallery = new SimpleLightbox('.card a');
     const result = await serviceSearch(refs.input.value);
     Notiflix.Notify.success(`Hooray! We found ${result.totalHits} images.`);
     wordForSearch = refs.input.value;
     refs.div.innerHTML = createMarkup(result.hits);
-    gallery.refresh();
-    gallery.on();
+
     refs.buttonMore.style.display = 'flex';
+    if (result.totalHits < 40) {
+      refs.buttonMore.style.display = 'none';
+      setTimeout(() => {
+        Notiflix.Notify.failure(
+          "We're sorry, but you've reached the end of search results."
+        );
+      }, 500);
+    }
   } catch (err) {
     console.log(err);
   } finally {
@@ -37,14 +49,16 @@ async function handleClick() {
   try {
     refs.buttonMore.style.display = 'none';
     number += 1;
-    if (number === 14) {
+    const result = await serviceSearch(wordForSearch, number);
+    refs.div.insertAdjacentHTML('beforeend', createMarkup(result.hits));
+    console.log(result);
+    refs.buttonMore.style.display = 'flex';
+    if (result.totalHits < 40 * number) {
       Notiflix.Notify.failure(
         "We're sorry, but you've reached the end of search results."
       );
+      refs.buttonMore.style.display = 'none';
     }
-    const result = await serviceSearch(wordForSearch, number);
-    refs.div.insertAdjacentHTML('beforeend', createMarkup(result.hits));
-    refs.buttonMore.style.display = 'flex';
   } catch (err) {
     console.log(err);
   } finally {
@@ -55,6 +69,9 @@ async function serviceSearch(value, number) {
   const API_KEY = '20424265-7f45fa22d4ab466f5f1dddb3b';
   const per_page = 'per_page=40';
   let page = number;
+  if (number === undefined) {
+    page = 1;
+  }
   const params = new URLSearchParams({
     key: API_KEY,
     q: value,
@@ -68,8 +85,10 @@ async function serviceSearch(value, number) {
 
     if (users.data.total === 0) {
       Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again."'
+        'Sorry, there are no images matching your search query. Please try again.'
       );
+      refs.div.innerHTML = '';
+      refs.buttonMore.style.display = 'none';
       return;
     }
     return users.data;
