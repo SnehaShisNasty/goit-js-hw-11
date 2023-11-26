@@ -1,4 +1,6 @@
 const { default: axios } = require('axios');
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
 const refs = {
   form: document.querySelector('form'),
@@ -11,15 +13,19 @@ refs.form.addEventListener('submit', handleSubmit);
 refs.buttonMore.addEventListener('click', handleClick);
 let wordForSearch;
 let number = 1;
+
 refs.buttonMore.style.display = 'none';
 
 async function handleSubmit(event) {
   event.preventDefault();
   try {
+    let gallery = new SimpleLightbox('.card a');
     const result = await serviceSearch(refs.input.value);
     Notiflix.Notify.success(`Hooray! We found ${result.totalHits} images.`);
     wordForSearch = refs.input.value;
     refs.div.innerHTML = createMarkup(result.hits);
+    gallery.refresh();
+    gallery.on();
     refs.buttonMore.style.display = 'flex';
   } catch (err) {
     console.log(err);
@@ -84,7 +90,7 @@ function createMarkup(arr) {
         downloads,
       }) => `
         <div class="photo-card">
-          <div class="card"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></div>
+          <a class="card"  href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
   
   <div class="info">
   <p class="info-item">
