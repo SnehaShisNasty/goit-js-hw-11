@@ -1,4 +1,5 @@
 const { default: axios } = require('axios');
+import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
 
@@ -16,6 +17,8 @@ let number = 1;
 refs.form.addEventListener('submit', handleSubmit);
 refs.buttonMore.addEventListener('click', handleClick);
 
+var lightbox = new SimpleLightbox('.photo-card a');
+lightbox.open();
 refs.buttonMore.style.display = 'none';
 
 async function handleSubmit(event) {
@@ -26,10 +29,11 @@ async function handleSubmit(event) {
   }
   try {
     const result = await serviceSearch(refs.input.value);
+
     Notiflix.Notify.success(`Hooray! We found ${result.totalHits} images.`);
     wordForSearch = refs.input.value;
     refs.div.innerHTML = createMarkup(result.hits);
-
+    lightbox.refresh();
     refs.buttonMore.style.display = 'flex';
     if (result.totalHits < 40) {
       refs.buttonMore.style.display = 'none';
@@ -51,6 +55,7 @@ async function handleClick() {
     number += 1;
     const result = await serviceSearch(wordForSearch, number);
     refs.div.insertAdjacentHTML('beforeend', createMarkup(result.hits));
+    lightbox.refresh();
     console.log(result);
     refs.buttonMore.style.display = 'flex';
     if (result.totalHits < 40 * number) {
