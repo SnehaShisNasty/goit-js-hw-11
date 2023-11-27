@@ -13,6 +13,7 @@ const refs = {
 
 let wordForSearch;
 let number = 1;
+let page;
 
 refs.form.addEventListener('submit', handleSubmit);
 refs.buttonMore.addEventListener('click', handleClick);
@@ -33,6 +34,8 @@ async function handleSubmit(event) {
     Notiflix.Notify.success(`Hooray! We found ${result.totalHits} images.`);
     wordForSearch = refs.input.value;
     refs.div.innerHTML = createMarkup(result.hits);
+    number = 1;
+
     lightbox.refresh();
     refs.buttonMore.style.display = 'flex';
     if (result.totalHits < 40) {
@@ -56,8 +59,8 @@ async function handleClick() {
     const result = await serviceSearch(wordForSearch, number);
     refs.div.insertAdjacentHTML('beforeend', createMarkup(result.hits));
     lightbox.refresh();
-    console.log(result);
     refs.buttonMore.style.display = 'flex';
+
     if (result.totalHits < 40 * number) {
       Notiflix.Notify.failure(
         "We're sorry, but you've reached the end of search results."
@@ -73,7 +76,7 @@ async function serviceSearch(value, number) {
   const URL = 'https://pixabay.com/api';
   const API_KEY = '20424265-7f45fa22d4ab466f5f1dddb3b';
   const per_page = 'per_page=40';
-  let page = number;
+  page = number;
   if (number === undefined) {
     page = 1;
   }
